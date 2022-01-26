@@ -1,4 +1,4 @@
-name: 'Deploy Icecast 2':
+name: 'Deploy Icecast 2'
 on:
   push:
 
