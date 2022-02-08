@@ -21,7 +21,7 @@ def call(endpoint, data=None, method="GET"):
     data_string = None
     if data:
         data_string = json.dumps(data).encode()
-        method = "POST"
+        # method = "POST"
 
     req = Request(url, data=data_string)
     req.method = method.upper()
@@ -29,7 +29,7 @@ def call(endpoint, data=None, method="GET"):
     for k, v in headers.items():
         req.add_header(k, v)
 
-    logger.info('loading %s ... with token %s', url, HEROKU_TOKEN)
+    logger.info('%s %s data=%r ', req.method, url, data)
     try:
         resp = urlopen(req)
         logger.info('got resp')
@@ -43,13 +43,22 @@ def call(endpoint, data=None, method="GET"):
 def get_apps():
     return call('apps', method='GET')
 
-
 def create_app(name):
     return call('apps', method='POST', data={'name': name})
 
 def delete_app(app_id):
     return call(f"apps/{app_id}", method="DELETE")
 
+def release_app(app_id, docker_image_id):    
+    data = {
+        "updates": [
+            {
+                "type": "server",
+                "docker_image": docker_image_id,
+            }
+        ]
+    }
+    return call(f"apps/{app_id}/formation", method="PATCH", data=data)
 
 def main():
     logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
@@ -58,6 +67,12 @@ def main():
     for app in apps:
         print(app['id'], app['name'])
 
+    app_name = "beats-with-benji-icecast"
+    # app = create_app(name=app_name)
+    # print(app)
+
+    docker_image_id = "23f35c9afecec554719cbc950e0bc08229167e8e7ac812ce82c4aca2923d3793"
+    app_id = "effcfd30-9553-4a4d-9925-3a22e60c4f0c"
+    release_app(app_id=app_id, docker_image_id=docker_image_id)
 if __name__ == '__main__':
     main()
-
